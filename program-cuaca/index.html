@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CuacaKu — Prediksi Cuaca Indonesia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --surface: rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.09);
+      --text: #e8eaf0;
+      --muted: rgba(232,234,240,0.5);
+      --accent: #5b8dee;
+      --accent2: #7c5cbf;
+      --warm: #f0a04b;
+      --cold: #5bb8f0;
+      --rain: #4b8ef0;
+      --glow: rgba(91,141,238,0.15);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(91,141,238,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(124,92,191,0.1) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(75,142,240,0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent); }
+
+    .tagline {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Search */
+    .search-wrap {
+      position: relative;
+      width: 340px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 50px 12px 18px;
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--accent);
+      background: rgba(91,141,238,0.08);
+      box-shadow: 0 0 0 3px rgba(91,141,238,0.12);
+    }
+    .search-input::placeholder { color: var(--muted); }
+
+    .search-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+    }
+
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: #141828;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      z-index: 100;
+      display: none;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .dropdown.show { display: block; }
+
+    .dropdown-item {
+      padding: 13px 18px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item:hover { background: var(--surface2); }
+    .dropdown-item small { color: var(--muted); font-size: 12px; display: block; margin-top: 2px; }
+
+    /* Loading */
+    #loading {
+      display: none;
+      text-align: center;
+      padding: 80px 0;
+    }
+    .loader {
+      width: 56px;
+      height: 56px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    #error-msg {
+      display: none;
+      background: rgba(240,80,80,0.1);
+      border: 1px solid rgba(240,80,80,0.25);
+      border-radius: 14px;
+      padding: 20px 24px;
+      color: #f05050;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    /* Welcome screen */
+    #welcome {
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .welcome-icon { font-size: 72px; margin-bottom: 24px; animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    #welcome h2 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+    #welcome p { color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+    /* Weather content */
+    #weather-content { display: none; }
+
+    /* City header */
+    .city-header {
+      margin-bottom: 28px;
+    }
+    .city-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+    .city-meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    /* Main card */
+    .main-card {
+      background: linear-gradient(135deg, rgba(91,141,238,0.15), rgba(124,92,191,0.1));
+      border: 1px solid rgba(91,141,238,0.2);
+      border-radius: 24px;
+      padding: 36px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .main-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), transparent);
+      pointer-events: none;
+    }
+
+    .main-weather {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .temp-display {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .temp-big {
+      font-family: 'Syne', sans-serif;
+      font-size: 96px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -4px;
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .temp-unit {
+      font-size: 28px;
+      margin-top: 16px;
+      color: var(--muted);
+      -webkit-text-fill-color: initial;
+    }
+
+    .weather-desc {
+      font-size: 18px;
+      font-weight: 500;
+      margin-top: 8px;
+      color: rgba(232,234,240,0.85);
+    }
+    .feels-like {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .weather-icon-big {
+      font-size: 80px;
+      text-align: center;
+      filter: drop-shadow(0 0 20px rgba(255,200,100,0.3));
+      animation: float 4s ease-in-out infinite;
+    }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 28px;
+      padding-top: 28px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+    .stat-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Panels grid */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Hourly scroll */
+    .hourly-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .hourly-scroll::-webkit-scrollbar { height: 4px; }
+    .hourly-scroll::-webkit-scrollbar-track { background: transparent; }
+    .hourly-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .hour-card {
+      flex-shrink: 0;
+      text-align: center;
+      padding: 14px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      min-width: 72px;
+      transition: all 0.2s;
+    }
+    .hour-card.now {
+      background: rgba(91,141,238,0.15);
+      border-color: rgba(91,141,238,0.3);
+    }
+    .hour-card:hover {
+      background: var(--surface2);
+      transform: translateY(-2px);
+    }
+    .hour-time { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .hour-icon { font-size: 22px; margin-bottom: 8px; }
+    .hour-temp { font-size: 15px; font-weight: 600; }
+    .hour-rain { font-size: 11px; color: var(--rain); margin-top: 4px; }
+
+    /* Daily forecast */
+    .day-row {
+      display: grid;
+      grid-template-columns: 80px 1fr auto auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .day-row:last-child { border-bottom: none; }
+    .day-label { font-size: 13px; font-weight: 500; }
+    .day-info { font-size: 20px; }
+    .day-temps { text-align: right; }
+    .day-max { font-size: 15px; font-weight: 600; }
+    .day-min { font-size: 13px; color: var(--muted); }
+    .day-rain-prob {
+      font-size: 12px;
+      color: var(--rain);
+      background: rgba(75,142,240,0.1);
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+
+    /* UV Bar */
+    .uv-bar-wrap {
+      margin-top: 8px;
+    }
+    .uv-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #4CAF50, #FFC107, #FF9800, #F44336, #9C27B0);
+      position: relative;
+      margin: 12px 0;
+    }
+    .uv-marker {
+      position: absolute;
+      top: -4px;
+      width: 16px;
+      height: 16px;
+      background: white;
+      border-radius: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      transition: left 0.5s;
+    }
+    .uv-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* Wind compass */
+    .wind-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .compass {
+      width: 100px;
+      height: 100px;
+      position: relative;
+    }
+    .compass svg { width: 100%; height: 100%; }
+    .wind-stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+    }
+    .wind-stat { text-align: center; }
+    .wind-stat .val { font-size: 18px; font-weight: 600; }
+    .wind-stat .lbl { font-size: 11px; color: var(--muted); }
+
+    /* Sunrise sunset */
+    .sun-bar {
+      position: relative;
+      height: 60px;
+      margin: 16px 0;
+    }
+    .sun-arc {
+      width: 100%;
+      height: 100%;
+    }
+    .sun-times {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+    .sun-times span { display: flex; align-items: center; gap: 6px; }
+
+    /* Updated time */
+    .update-time {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 12px;
+    }
+
+    /* Hourly panel - full width */
+    .panel-full {
+      grid-column: 1 / -1;
+    }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .panels { grid-template-columns: 1fr; }
+      .panel-full { grid-column: 1; }
+      .main-weather { grid-template-columns: 1fr; }
+      .weather-icon-big { font-size: 56px; }
+      .temp-big { font-size: 72px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .search-wrap { width: 100%; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.4s ease-out both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in:nth-child(2) { animation-delay: 0.05s; }
+    .fade-in:nth-child(3) { animation-delay: 0.1s; }
+    .fade-in:nth-child(4) { animation-delay: 0.15s; }
+    .fade-in:nth-child(5) { animation-delay: 0.2s; }
+    .fade-in:nth-child(6) { animation-delay: 0.25s; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <div class="logo">Cuaca<span>Ku</span></div>
+      <div class="tagline">Prediksi Cuaca Akurat</div>
+    </div>
+    <div class="search-wrap">
+      <input type="text" id="searchInput" class="search-input" placeholder="Cari kota... (mis. Jakarta)" autocomplete="off">
+      <button class="search-btn" onclick="doSearch()">🔍</button>
+      <div id="dropdown" class="dropdown"></div>
+    </div>
+  </header>
+
+  <div id="error-msg"></div>
+
+  <div id="loading">
+    <div class="loader"></div>
+    <p style="color:var(--muted);font-size:14px;">Mengambil data cuaca...</p>
+  </div>
+
+  <div id="welcome">
+    <div class="welcome-icon">🌤️</div>
+    <h2>Selamat Datang di CuacaKu</h2>
+    <p>Cari nama kota untuk melihat prediksi cuaca<br>terkini dan prakiraan 7 hari ke depan.</p>
+  </div>
+
+  <div id="weather-content"></div>
+</div>
+
+<script>
+let selectedCity = null;
+let searchTimer = null;
+
+const searchInput = document.getElementById('searchInput');
+const dropdown = document.getElementById('dropdown');
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  const q = searchInput.value.trim();
+  if (q.length < 2) { dropdown.classList.remove('show'); return; }
+  searchTimer = setTimeout(() => fetchCities(q), 350);
+});
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+  if (e.key === 'Escape') dropdown.classList.remove('show');
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) dropdown.classList.remove('show');
+});
+
+async function fetchCities(q) {
+  try {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    showDropdown(data);
+  } catch (e) { console.error(e); }
+}
+
+function showDropdown(cities) {
+  if (!cities.length) { dropdown.classList.remove('show'); return; }
+  dropdown.innerHTML = cities.map(c => `
+    <div class="dropdown-item" onclick="selectCity(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+      <strong>${c.name}</strong>
+      <small>${c.admin1 ? c.admin1 + ', ' : ''}${c.country}</small>
+    </div>
+  `).join('');
+  dropdown.classList.add('show');
+}
+
+function selectCity(city) {
+  selectedCity = city;
+  searchInput.value = city.name + (city.admin1 ? ', ' + city.admin1 : '');
+  dropdown.classList.remove('show');
+  loadWeather(city);
+}
+
+function doSearch() {
+  const q = searchInput.value.trim();
+  if (!q) return;
+  fetchCities(q).then(() => {
+    const items = dropdown.querySelectorAll('.dropdown-item');
+    if (items.length > 0) items[0].click();
+  });
+}
+
+async function loadWeather(city) {
+  document.getElementById('welcome').style.display = 'none';
+  document.getElementById('weather-content').style.display = 'none';
+  document.getElementById('error-msg').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+
+  try {
+    const res = await fetch(`/api/weather?lat=${city.lat}&lon=${city.lon}&timezone=${city.timezone || 'Asia/Jakarta'}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    renderWeather(city, data);
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    const err = document.getElementById('error-msg');
+    err.textContent = '⚠️ Gagal memuat cuaca: ' + e.message;
+    err.style.display = 'block';
+  }
+}
+
+function renderWeather(city, data) {
+  document.getElementById('loading').style.display = 'none';
+  const c = data.current;
+  const uvPct = Math.min(c.uv_index / 11 * 100, 100);
+
+  // Build hourly HTML
+  const hourlyHTML = data.hourly.map((h, i) => `
+    <div class="hour-card ${i === 0 ? 'now' : ''}">
+      <div class="hour-time">${i === 0 ? 'Skrg' : h.time}</div>
+      <div class="hour-icon">${h.icon}</div>
+      <div class="hour-temp">${h.temp}°</div>
+      <div class="hour-rain">${h.rain_prob > 0 ? h.rain_prob + '%' : ''}</div>
+    </div>
+  `).join('');
+
+  // Build daily HTML
+  const dailyHTML = data.daily.map((d, i) => `
+    <div class="day-row">
+      <div>
+        <div class="day-label">${d.label}</div>
+        <div style="font-size:11px;color:var(--muted)">${d.date}</div>
+      </div>
+      <div class="day-info">${d.icon}</div>
+      <div>
+        ${d.rain_prob > 20 ? `<div class="day-rain-prob">💧 ${d.rain_prob}%</div>` : ''}
+      </div>
+      <div class="day-temps">
+        <div class="day-max">${d.max}°</div>
+        <div class="day-min">${d.min}°</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Sunrise/sunset arc
+  const today = data.daily[0];
+  const srTime = today.sunrise;
+  const ssTime = today.sunset;
+
+  // Compass SVG
+  const compassAngle = c.wind_deg || 0;
+  const compassSVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+    <text x="50" y="14" text-anchor="middle" fill="rgba(232,234,240,0.4)" font-size="10" font-family="Space Grotesk">U</text>
+    <text x="86" y="54" text-anchor="middle" fill="rgba(232,234,240,0.4)" font-size="10" font-family="Space Grotesk">T</text>
+    <text x="50" y="94" text-anchor="middle" fill="rgba(232,234,240,0.4)" font-size="10" font-family="Space Grotesk">S</text>
+    <text x="14" y="54" text-anchor="middle" fill="rgba(232,234,240,0.4)" font-size="10" font-family="Space Grotesk">B</text>
+    <g transform="rotate(${compassAngle}, 50, 50)">
+      <polygon points="50,15 45,50 55,50" fill="#5b8dee"/>
+      <polygon points="50,85 45,50 55,50" fill="rgba(255,255,255,0.15)"/>
+    </g>
+    <circle cx="50" cy="50" r="5" fill="rgba(255,255,255,0.9)"/>
+  </svg>`;
+
+  const html = `
+    <div class="city-header fade-in">
+      <div class="city-name">${city.name}</div>
+      <div class="city-meta">📍 ${city.admin1 ? city.admin1 + ', ' : ''}${city.country} &nbsp;·&nbsp; Diperbarui: ${data.updated}</div>
+    </div>
+
+    <div class="main-card fade-in">
+      <div class="main-weather">
+        <div>
+          <div class="temp-display">
+            <div class="temp-big">${c.temp}</div>
+            <div class="temp-unit">°C</div>
+          </div>
+          <div class="weather-desc">${c.icon} ${c.description}</div>
+          <div class="feels-like">Terasa seperti ${c.feels_like}°C &nbsp;·&nbsp; Kelembaban ${c.humidity}%</div>
+        </div>
+        <div class="weather-icon-big">${c.icon}</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">💨 Angin</div>
+          <div class="stat-value">${c.wind_speed} <small style="font-size:13px;font-weight:400">km/j</small></div>
+          <div class="stat-sub">Arah ${c.wind_dir}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">👁 Jarak Pandang</div>
+          <div class="stat-value">${c.visibility} <small style="font-size:13px;font-weight:400">km</small></div>
+          <div class="stat-sub">${c.visibility >= 10 ? 'Sangat Baik' : c.visibility >= 5 ? 'Baik' : 'Terbatas'}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">🌡 Tekanan</div>
+          <div class="stat-value">${Math.round(c.pressure)} <small style="font-size:13px;font-weight:400">hPa</small></div>
+          <div class="stat-sub">${c.pressure > 1013 ? 'Tinggi' : 'Rendah'}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">🌧 Hujan</div>
+          <div class="stat-value">${c.precipitation} <small style="font-size:13px;font-weight:400">mm</small></div>
+          <div class="stat-sub">Saat ini</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panels">
+      <!-- Hourly full width -->
+      <div class="panel panel-full fade-in">
+        <div class="panel-title">⏱ Prakiraan Per Jam (24 Jam)</div>
+        <div class="hourly-scroll">${hourlyHTML}</div>
+      </div>
+
+      <!-- 7 day forecast -->
+      <div class="panel fade-in">
+        <div class="panel-title">📅 Prakiraan 7 Hari</div>
+        ${dailyHTML}
+      </div>
+
+      <!-- Right panels -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <!-- UV Index -->
+        <div class="panel fade-in">
+          <div class="panel-title">☀️ Indeks UV</div>
+          <div style="font-size:36px;font-weight:700;color:${c.uv_color}">${c.uv_index}</div>
+          <div style="font-size:14px;color:${c.uv_color};margin-bottom:8px">${c.uv_label}</div>
+          <div class="uv-bar-wrap">
+            <div class="uv-bar">
+              <div class="uv-marker" style="left:${uvPct}%"></div>
+            </div>
+            <div class="uv-labels">
+              <span>Rendah</span>
+              <span>Sedang</span>
+              <span>Tinggi</span>
+              <span>Ekstrem</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wind -->
+        <div class="panel fade-in">
+          <div class="panel-title">💨 Angin</div>
+          <div class="wind-info">
+            <div class="compass">${compassSVG}</div>
+            <div class="wind-stats-row">
+              <div class="wind-stat">
+                <div class="val">${c.wind_speed}</div>
+                <div class="lbl">km/j Kec.</div>
+              </div>
+              <div class="wind-stat">
+                <div class="val">${c.wind_gust}</div>
+                <div class="lbl">km/j Hembus</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sunrise/Sunset -->
+        <div class="panel fade-in">
+          <div class="panel-title">🌅 Matahari Hari Ini</div>
+          <svg class="sun-arc" viewBox="0 0 200 70" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sunGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#f0a04b" stop-opacity="0.3"/>
+                <stop offset="50%" stop-color="#f0d04b" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#f08040" stop-opacity="0.3"/>
+              </linearGradient>
+            </defs>
+            <path d="M 10 65 Q 100 10 190 65" fill="none" stroke="url(#sunGrad)" stroke-width="2" stroke-dasharray="4,3"/>
+            <circle cx="10" cy="65" r="6" fill="#f0a04b" opacity="0.8"/>
+            <circle cx="190" cy="65" r="6" fill="#f08040" opacity="0.8"/>
+            <text x="10" y="52" text-anchor="middle" fill="rgba(232,234,240,0.5)" font-size="7" font-family="Space Grotesk">🌅</text>
+            <text x="190" y="52" text-anchor="middle" fill="rgba(232,234,240,0.5)" font-size="7" font-family="Space Grotesk">🌇</text>
+          </svg>
+          <div class="sun-times">
+            <span>🌅 <strong>${srTime}</strong></span>
+            <span><strong>${ssTime}</strong> 🌇</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const wc = document.getElementById('weather-content');
+  wc.innerHTML = html;
+  wc.style.display = 'block';
+}
+</script>
+</body>
+</html>
