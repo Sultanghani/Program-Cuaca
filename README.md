@@ -15,7 +15,7 @@ Aplikasi web prediksi cuaca yang saya buat pakai Python + Flask. Awalnya cuma is
 Jadi project ini punya dua "otak" sekaligus:
 
 1. **Data real-time** dari [Open-Meteo API](https://open-meteo.com/) — gratis, no API key, cukup reliable buat cuaca global
-2. **Model ML (Random Forest)** yang dilatih dari dataset cuaca lokal — buat nampilin prediksi kategori cuaca (Cerah / Berawan / Hujan) berdasarkan kondisi sekarang
+2. **Model ML (Gradient Boosting)** yang dilatih dari dataset cuaca lokal — buat nampilin prediksi kategori cuaca (Cerah / Berawan / Hujan) berdasarkan kondisi sekarang
 
 Jadi hasilnya bukan cuma nampil angka suhu doang, tapi juga ada prediksi ML-nya. Lumayan buat nunjukkin bahwa backend dan data science bisa digabung dalam satu app.
 
@@ -25,7 +25,7 @@ Jadi hasilnya bukan cuma nampil angka suhu doang, tapi juga ada prediksi ML-nya.
 
 - 🔍 Cari kota mana aja (autocomplete)
 - 🌡️ Cuaca real-time — suhu, kelembaban, angin, tekanan udara, UV index
-- 🤖 Prediksi ML dari dataset lokal (akurasi ~85%)
+- 🤖 Prediksi ML dari dataset lokal (akurasi ~45%)
 - ⏱️ Prakiraan per jam — 24 jam ke depan
 - 📅 Prakiraan 7 hari
 - 💨 Kompas arah angin
@@ -39,7 +39,7 @@ Jadi hasilnya bukan cuma nampil angka suhu doang, tapi juga ada prediksi ML-nya.
 | Layer | Tools |
 |---|---|
 | Backend | Python, Flask |
-| ML | scikit-learn (Random Forest) |
+| ML | scikit-learn (Gradient Boosting) |
 | Data | pandas, numpy |
 | API | Open-Meteo (weather + geocoding) |
 | Frontend | HTML, CSS, Vanilla JS |
