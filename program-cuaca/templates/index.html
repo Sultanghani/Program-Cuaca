@@ -711,6 +711,15 @@ function renderWeather(city, data) {
 
       <!-- Right panels -->
       <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="panel fade-in" style="border-color: rgba(91,141,238,0.4); background: rgba(91,141,238,0.05);">
+          <div class="panel-title">🤖 Prediksi AI Lokal</div>
+          <div style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">
+            ${data.ml.icon} ${data.ml.prediksi}
+          </div>
+          <div style="font-size: 13px; color: var(--muted);">
+            Confidence: <strong>${data.ml.confidence}%</strong>
+          </div>
+        </div>
         <!-- UV Index -->
         <div class="panel fade-in">
           <div class="panel-title">☀️ Indeks UV</div>
